@@ -25,5 +25,5 @@ scrape_configs:
           container_id: container_id
       - labels:
           container_id:
-          container_name: "{{ .ContainerName }}"
-          image: "{{ .Image }}"
+          container_name: container_name
+          image:
