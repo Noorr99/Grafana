@@ -15,8 +15,8 @@ scrape_configs:
           - localhost
         labels:
           job: docker
+          environment: "production"
           __path__: /var/lib/docker/containers/*/*.log
-          environment: "production"  # Set this dynamically if needed
 
     pipeline_stages:
       - docker: {}
