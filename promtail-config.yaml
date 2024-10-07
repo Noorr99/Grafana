@@ -15,14 +15,11 @@ scrape_configs:
           - localhost
         labels:
           job: docker
-          environment: "production"  # Set dynamically if needed
+          environment: "production"
 
     pipeline_stages:
-      - json:
-          expressions:
-            container_id: container_id
-            container_name: container_name
-            image: image
+      - regex:
+          expression: '(?P<container_id>[a-f0-9]{64}) (?P<container_name>[\w-]+) (?P<image>[\w:/.-]+)'
       - labels:
           container_id:
           container_name:
