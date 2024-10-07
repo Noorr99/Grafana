@@ -7,6 +7,8 @@ services:
         networks:
             - grafana-loki
             - promtail-loki
+        labels:
+            - "container_name=loki"
 
     promtail:
         depends_on:
@@ -14,12 +16,14 @@ services:
         image: grafana/promtail:master
         volumes:
             - /var/log:/var/log
-            - /var/lib/docker/containers:/var/lib/docker/containers:ro  # Read-only access for Docker container logs
-            - /var/run/docker.sock:/var/run/docker.sock  # Access to Docker socket for metadata
-            - ./promtail-config.yaml:/etc/promtail/docker-config.yaml  # Mount your Promtail config file
+            - /var/lib/docker/containers:/var/lib/docker/containers:ro  # Read-only access for logs
+            - /var/run/docker.sock:/var/run/docker.sock  # Access to Docker socket
+            - ./promtail-config.yaml:/etc/promtail/docker-config.yaml  # Mount your config file
         command: -config.file=/etc/promtail/docker-config.yaml
         networks:
             - promtail-loki
+        labels:
+            - "container_name=promtail"
 
     cadvisor:
         image: google/cadvisor:v0.33.0
@@ -31,6 +35,8 @@ services:
             - /dev/disk/:/dev/disk:ro
         networks:
             - prometheus-cadvisor
+        labels:
+            - "container_name=cadvisor"
 
     prometheus:
         image: prom/prometheus:v2.7.1
@@ -47,6 +53,8 @@ services:
             --storage.tsdb.path=/prometheus
             --web.console.libraries=/usr/share/prometheus/console_libraries
             --web.console.templates=/usr/share/prometheus/consoles
+        labels:
+            - "container_name=prometheus"
 
     grafana:
         depends_on:
@@ -64,6 +72,8 @@ services:
             - world
             - grafana-loki
             - grafana-prometheus
+        labels:
+            - "container_name=grafana"
 
 networks:
     world:
