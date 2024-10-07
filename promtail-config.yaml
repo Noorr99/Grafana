@@ -16,5 +16,8 @@ scrape_configs:
         labels:
           job: docker
           __path__: /var/lib/docker/containers/*/*.log
-          __docker_container_name__: "{{ .ContainerName }}"
-          __service__: "{{ .ContainerName }}"  # Adding a service label based on the container name
+          container_name: "{{ .ContainerName }}"
+          service: "{{ .ContainerName }}"  # Assuming container name represents the service
+          environment: "production"  # You can set this dynamically if needed
+          container_id: "{{ .ContainerID }}"
+          image: "{{ .ImageName }}"
