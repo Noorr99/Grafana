@@ -14,8 +14,9 @@ services:
         image: grafana/promtail:master
         volumes:
             - /var/log:/var/log
-            - /var/lib/docker/containers:/var/lib/docker/containers  # Ensure to include Docker container logs
-            - ./promtail-config.yaml:/etc/promtail/docker-config.yaml  # Mount your config file
+            - /var/lib/docker/containers:/var/lib/docker/containers:ro  # Read-only access for Docker container logs
+            - /var/run/docker.sock:/var/run/docker.sock  # Access to Docker socket for metadata
+            - ./promtail-config.yaml:/etc/promtail/docker-config.yaml  # Mount your Promtail config file
         command: -config.file=/etc/promtail/docker-config.yaml
         networks:
             - promtail-loki
