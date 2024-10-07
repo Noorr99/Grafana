@@ -15,8 +15,8 @@ scrape_configs:
           - localhost
         labels:
           job: docker
-          __path__: /var/lib/docker/containers/*/*.log
           environment: "production"
+          __path__: /var/lib/docker/containers/*/*.log
 
     pipeline_stages:
       - regex:
@@ -25,5 +25,5 @@ scrape_configs:
           container_id: container_id
       - labels:
           container_id:
-          container_name:
-          image:
+          container_name: "{{ .ContainerName }}"
+          image: "{{ .Image }}"
