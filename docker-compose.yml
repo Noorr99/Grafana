@@ -1,77 +1,34 @@
-version: "3"
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
 
-services:
-    loki:
-        image: grafana/loki:master
-        command: -config.file=/etc/loki/local-config.yaml
-        networks:
-            - grafana-loki
-            - promtail-loki
+positions:
+  filename: /tmp/positions.yaml
 
-    promtail:
-        depends_on:
-            - loki
-        image: grafana/promtail:master
-        volumes:
-            - /var/log:/var/log
-            - /var/lib/docker/containers:/var/lib/docker/containers:ro  # Read-only access for Docker container logs
-            - /var/run/docker.sock:/var/run/docker.sock  # Access to Docker socket for metadata
-            - ./promtail-config.yaml:/etc/promtail/docker-config.yaml  # Mount your Promtail config file
-        command: -config.file=/etc/promtail/docker-config.yaml
-        networks:
-            - promtail-loki
+clients:
+  - url: http://loki:3100/loki/api/v1/push
 
-    cadvisor:
-        image: google/cadvisor:v0.33.0
-        volumes:
-            - /:/rootfs:ro
-            - /var/run:/var/run:ro
-            - /sys:/sys:ro
-            - /var/lib/docker/:/var/lib/docker:ro
-            - /dev/disk/:/dev/disk:ro
-        networks:
-            - prometheus-cadvisor
+scrape_configs:
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          environment: "production"
+          __path__: /var/lib/docker/containers/*/*.log
 
-    prometheus:
-        image: prom/prometheus:v2.7.1
-        ports:
-            - "9090:9090"
-        volumes:
-            - ./prometheus:/app.cfg
-        networks:
-            - world
-            - prometheus-cadvisor
-            - grafana-prometheus
-        command: >-
-            --config.file=/app.cfg/prometheus.yml
-            --storage.tsdb.path=/prometheus
-            --web.console.libraries=/usr/share/prometheus/console_libraries
-            --web.console.templates=/usr/share/prometheus/consoles
-
-    grafana:
-        depends_on:
-            - loki
-        image: grafana/grafana:6.0.0
-        ports:
-            - "3000:3000"
-        environment:
-            GF_SECURITY_ADMIN_USER: admin
-            GF_SECURITY_ADMIN_PASSWORD: test
-            GF_PATHS_PROVISIONING: '/app.cfg/provisioning'
-        volumes:
-            - ./grafana:/app.cfg
-        networks:
-            - world
-            - grafana-loki
-            - grafana-prometheus
-
-networks:
-    world:
-    promtail-loki:
-        internal: true
-    grafana-loki:
-        internal: true
-    grafana-prometheus:
-        internal: true
-    prometheus-cadvisor:
-        internal: true
+    pipeline_stages:
+      - regex:
+          expression: '/var/lib/docker/containers/(?P<container_id>[a-f0-9]{64})/(?P<filename>[a-f0-9]{64}-json\.log)'
+      - docker:
+          container_id: container_id
+      - replace:
+          expression: "^(?P<container_id>[a-f0-9]{64})$"
+          source: container_id
+          target: container_name
+          replacement: "{{.ContainerName}}"
+      - labels:
+          container_id:
+          container_name:
+          image:
