@@ -23,7 +23,12 @@ scrape_configs:
           expression: '/var/lib/docker/containers/(?P<container_id>[a-f0-9]{64})/(?P<filename>[a-f0-9]{64}-json\.log)'
       - docker:
           container_id: container_id
+      - replace:
+          expression: "^(?P<container_id>[a-f0-9]{64})$"
+          source: container_id
+          target: container_name
+          replacement: "{{.ContainerName}}"
       - labels:
           container_id:
-          container_name: container_name
+          container_name:
           image:
