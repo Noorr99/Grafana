@@ -25,5 +25,10 @@ scrape_configs:
           container_id: container_id
       - labels:
           container_id:
-          container_name: container_name
-          image:
+          container_name:
+          image
+      - replace:
+          source: container_name
+          target: container_name
+          expression: "(.*)"
+          replacement: "$${CONTAINER_NAME}"
